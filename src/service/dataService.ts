@@ -32,6 +32,7 @@ function parseJSONSafe<T>(data: string): T {
  */
 export function getStockPrices(symbol: string): HistoricalPrice[] | undefined {
   logger.info(`Fetching stock prices for symbol: ${symbol}`);
+  // This is where a call to a third party API should be made.
   const pricesData = parseJSONSafe<Stock[]>(readFileSyncSafe(pricesFilePath));
   const stock = pricesData.find(stock => stock.symbol === symbol);
   return stock?.prices;
