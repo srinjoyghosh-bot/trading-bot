@@ -3,5 +3,13 @@
  */
 export interface Stock {
   symbol: string; // The ticker symbol, e.g., 'AAPL'
-  price: number; // The current price for the stock
+  prices: HistoricalPrice[]; // The current price for the stock
 }
+
+/**
+ * HistoricalPrice represents the price of a stock at a specific moment.
+ */
+export interface HistoricalPrice {
+    timestamp: string; // ISO date string
+    price: number;     // Price at the given time
+  }

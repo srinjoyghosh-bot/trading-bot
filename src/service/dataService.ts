@@ -1,6 +1,6 @@
 import path from "path";
 import { Trade } from "../models/trade";
-import { Stock } from "../models/stock";
+import { HistoricalPrice, Stock } from "../models/stock";
 import { TradingBotError } from "../utils/tradingBotError";
 import { readFileSyncSafe, writeFileSyncSafe } from "../utils/fileUtils";
 import logger from "../utils/logger";
@@ -26,15 +26,15 @@ function parseJSONSafe<T>(data: string): T {
 }
 
 /**
- * Retrieves the current stock price for a given symbol.
+ * Retrieves the historical stock prices for a given symbol.
  * @param symbol The stock symbol to retrieve the price for.
- * @returns The current stock price or undefined if not found.
+ * @returns Array of historical prices or undefined if not found.
  */
-export function getStockPrice(symbol: string): number | undefined {
-  logger.info(`Fetching stock price for symbol: ${symbol}`);
+export function getStockPrices(symbol: string): HistoricalPrice[] | undefined {
+  logger.info(`Fetching stock prices for symbol: ${symbol}`);
   const pricesData = parseJSONSafe<Stock[]>(readFileSyncSafe(pricesFilePath));
   const stock = pricesData.find(stock => stock.symbol === symbol);
-  return stock?.price;
+  return stock?.prices;
 }
 
 /**

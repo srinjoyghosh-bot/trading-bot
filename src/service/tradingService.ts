@@ -1,5 +1,5 @@
 import {
-  getStockPrice,
+  getStockPrices,
   logTrade,
   getAllTrades,
   getHoldings,
@@ -9,50 +9,46 @@ import { Trade } from "../models/trade";
 import { TRADING_BOT_CONFIG } from "../../config/config";
 import { TradingBotError } from "../utils/tradingBotError";
 import logger from "../utils/logger";
+import { calculateMovingAverage } from "../utils/movingAverage";
 
 let balance = TRADING_BOT_CONFIG.initialBalance;
 
 /**
- * Executes trading strategies based on stock prices and historical trade data.
- * Determines whether to buy or sell stocks based on predefined rules like price changes.
+ * Executes trades based on moving average crossover strategy.
  * @throws TradingBotError if any part of the trade execution logic fails.
  */
 export const executeTrades = async () => {
-  logger.info('Executing trades');
+  logger.info('Executing trades based on moving averages');
   try {
     const holdings = getHoldings();
     const symbols = TRADING_BOT_CONFIG.stocks;
 
     symbols.forEach((symbol) => {
-      const currentPrice = getStockPrice(symbol);
-      if (currentPrice === undefined) {
-        logger.warn(`No price found for symbol ${symbol}`);
-        throw new TradingBotError(`No price found for symbol ${symbol}`);
+      const prices = getStockPrices(symbol);
+      if (prices === undefined) {
+        logger.warn(`No historical prices found for symbol ${symbol}`);
+        throw new TradingBotError(`No historical price found for symbol ${symbol}`);
       }
-      const lastTrades = getAllTrades();
-      lastTrades.reverse();
-      const lastTrade = lastTrades.find((trade) => trade.symbol === symbol);
+      const shortTermMA = calculateMovingAverage(prices, TRADING_BOT_CONFIG.movingAveragePeriods.shortTerm); 
+      const longTermMA = calculateMovingAverage(prices, TRADING_BOT_CONFIG.movingAveragePeriods.longTerm);
 
-        // Calculating price change and making appropriate trade decisions
-        if (lastTrade) {
-          const priceChange =
-            (currentPrice - lastTrade.price) / lastTrade.price;
-            logger.debug(`Price change for ${symbol}: ${priceChange}`);
-          if (
-            lastTrade.type === "buy" &&
-            priceChange >= TRADING_BOT_CONFIG.tradeRules.sellThreshold
-          ) {
-            sell(symbol, currentPrice, holdings);
-          } else if (
-            lastTrade.type === "sell" &&
-            priceChange <= TRADING_BOT_CONFIG.tradeRules.buyThreshold
-          ) {
-            buy(symbol, currentPrice, holdings);
+      if (!isNaN(shortTermMA) && !isNaN(longTermMA)) {
+        const lastTrades = getAllTrades();
+        lastTrades.reverse();
+        const lastTrade = lastTrades.find(trade => trade.symbol === symbol);
+        
+        if (shortTermMA > longTermMA) {
+          // Bullish crossover - Buy
+          if (!lastTrade || lastTrade.type === 'sell') {
+            buy(symbol, prices[prices.length - 1].price, holdings);
           }
-        } else {
-          // First trade action for this symbol; buying if no holdings exist
-          buy(symbol, currentPrice, holdings);
+        } else if (shortTermMA < longTermMA) {
+          // Bearish crossover - Sell
+          if (!lastTrade || lastTrade.type === 'buy') {
+            sell(symbol, prices[prices.length - 1].price, holdings);
+          }
         }
+      }
       
     });
   } catch (error) {
@@ -141,33 +137,65 @@ const sell = (
 };
 
 /**
- * Generates a profit/loss report based on current holdings, prices and initial budget.
- * @returns An object containing the current balance, holdings and profit/loss figure.
+ * Finds the most current or given timestamp price for a stock.
+ * @param symbol The stock symbol.
+ * @param timestamp The timestamp of the trade.
+ * @returns The price at the given date or the most current price.
+ */
+function getPriceAtDate(symbol: string, timestamp: string): number {
+    const prices = getStockPrices(symbol);
+    if (prices) {
+      // Find the price closest to the trade's timestamp
+      prices.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      const closestPrice = prices.reduce((prev, curr) => {
+        return Math.abs(new Date(curr.timestamp).getTime() - new Date(timestamp).getTime()) <
+               Math.abs(new Date(prev.timestamp).getTime() - new Date(timestamp).getTime())
+               ? curr : prev;
+      });
+      return closestPrice.price;
+    }
+    return 0;
+  }
+
+/**
+ * Generates a profit and loss report based on all trades and current stock prices.
+ * Utilizes logging to record key operations and catches potential errors.
+ * 
+ * @returns The profit and loss report as a string, or an error message if operation fails.
  * @throws TradingBotError if report generation logic fails.
  */
-export const getProfitLossReport = () => {
-  try {
-    const holdings = getHoldings();
-    const marketValue = Object.keys(holdings).reduce((sum, symbol) => {
-      const price = getStockPrice(symbol);
-      return sum + holdings[symbol] * (price ?? 0);
-    }, 0);
-    const totalValue = balance + marketValue;
-    const profitLoss = totalValue - TRADING_BOT_CONFIG.initialBalance;
-    logger.info(`Generating profit/loss report: ${JSON.stringify({ balance, holdings, profitLoss })}`);
-    return {
-      balance,
-      holdings,
-      profitLoss,
-    };
-  } catch (error) {
-    logger.error(`Error generating profit/loss report: ${(error as Error).message}`);
-    throw error instanceof TradingBotError
-      ? error
-      : new TradingBotError(
-          `Error generating profit/loss report: ${
-            (error as Error).message
-          }`
-        );
-  }
+export const getProfitLossReport = () : string => {
+    logger.info('Generating profit and loss report');
+    try {
+        const trades: Trade[] = getAllTrades();
+        let totalProfitOrLoss = 0;
+      
+        const reportLines = trades.map(trade => {
+          const tradePrice = trade.price;
+          const currentPrice = getPriceAtDate(trade.symbol, new Date(trade.timestamp).toDateString());
+          let profitOrLoss = 0;
+      
+          if (trade.type === 'buy') {
+            profitOrLoss = (currentPrice - tradePrice) * trade.quantity;
+          } else if (trade.type === 'sell') {
+            profitOrLoss = (tradePrice - currentPrice) * trade.quantity;
+          }
+      
+          totalProfitOrLoss += profitOrLoss; 
+          logger.debug(`Processed trade: ${trade.symbol} ${trade.type} for ${trade.quantity} units, ` +
+            `profit/loss: $${profitOrLoss.toFixed(2)}`);
+          return `${trade.timestamp} | ${trade.symbol} | ${trade.type} | Quantity: ${trade.quantity} | ` +
+                 `Trade Price: $${tradePrice.toFixed(2)} | Current Price: $${currentPrice.toFixed(2)} | ` +
+                 `Profit/Loss: $${profitOrLoss.toFixed(2)}`;
+        });
+      
+        const reportHeader = `Date | Symbol | Type | Quantity | Trade Price | Current Price | Profit/Loss`;
+        const totalLine = `Total Profit/Loss: $${totalProfitOrLoss.toFixed(2)}`;
+        logger.info('Profit and loss report generated successfully');
+        return [reportHeader].concat(reportLines).concat([totalLine]).join('\n');
+    } catch (error) {
+        console.error(error)
+        logger.error(`Error generating profit and loss report: ${(error as Error).message}`);
+        throw error instanceof TradingBotError ? error :  new TradingBotError(`Failed to generate profit and loss report: ${(error as Error).message}`);
+    }
 };
