@@ -8,10 +8,12 @@ import {
 import { Trade } from "../models/trade";
 import { TRADING_BOT_CONFIG } from "../../config/config";
 import { TradingBotError } from "../utils/tradingBotError";
+import logger from "../utils/logger";
 
 let balance = TRADING_BOT_CONFIG.initialBalance;
 
 export const executeTrades = async () => {
+  logger.info('Executing trades');
   try {
     const holdings = getHoldings();
     const symbols = TRADING_BOT_CONFIG.stocks;
@@ -19,6 +21,7 @@ export const executeTrades = async () => {
     symbols.forEach((symbol) => {
       const currentPrice = getStockPrice(symbol);
       if (currentPrice === undefined) {
+        logger.warn(`No price found for symbol ${symbol}`);
         throw new TradingBotError(`No price found for symbol ${symbol}`);
       }
       const lastTrades = getAllTrades();
@@ -29,7 +32,7 @@ export const executeTrades = async () => {
         if (lastTrade) {
           const priceChange =
             (currentPrice - lastTrade.price) / lastTrade.price;
-
+            logger.debug(`Price change for ${symbol}: ${priceChange}`);
           if (
             lastTrade.type === "buy" &&
             priceChange >= TRADING_BOT_CONFIG.tradeRules.sellThreshold
@@ -48,10 +51,11 @@ export const executeTrades = async () => {
       }
     });
   } catch (error) {
+    logger.error(`Error executing trades: ${(error as Error).message}`);
     throw error instanceof TradingBotError
       ? error
       : new TradingBotError(
-          `Error executing trades: ${(error as TradingBotError).message}`
+          `Error executing trades: ${(error as Error).message}`
         );
   }
 };
@@ -75,13 +79,14 @@ const buy = (
         timestamp: new Date(),
       };
       logTrade(trade);
-      console.log(`Bought ${quantity} shares of ${symbol} at $${price}`);
+      logger.info(`Bought ${quantity} shares of ${symbol} at $${price}`);
     }
   } catch (error) {
+    logger.error(`Error buying stock ${symbol}: ${(error as Error).message}`);
     throw error instanceof TradingBotError
       ? error
       : new TradingBotError(
-          `Error buying stock ${symbol}: ${(error as TradingBotError).message}`
+          `Error buying stock ${symbol}: ${(error as Error).message}`
         );
   }
 };
@@ -104,13 +109,14 @@ const sell = (
         timestamp: new Date(),
       };
       logTrade(trade);
-      console.log(`Sold ${holding} shares of ${symbol} at $${price}`);
+      logger.info(`Sold ${holding} shares of ${symbol} at $${price}`);
     }
   } catch (error) {
+    logger.error(`Error selling stock ${symbol}: ${(error as Error).message}`);
     throw error instanceof TradingBotError
       ? error
       : new TradingBotError(
-          `Error selling stock ${symbol}: ${(error as TradingBotError).message}`
+          `Error selling stock ${symbol}: ${(error as Error).message}`
         );
   }
 };
@@ -124,17 +130,19 @@ export const getProfitLossReport = () => {
     }, 0);
     const totalValue = balance + marketValue;
     const profitLoss = totalValue - TRADING_BOT_CONFIG.initialBalance;
+    logger.info(`Generating profit/loss report: ${JSON.stringify({ balance, holdings, profitLoss })}`);
     return {
       balance,
       holdings,
       profitLoss,
     };
   } catch (error) {
+    logger.error(`Error generating profit/loss report: ${(error as Error).message}`);
     throw error instanceof TradingBotError
       ? error
       : new TradingBotError(
           `Error generating profit/loss report: ${
-            (error as TradingBotError).message
+            (error as Error).message
           }`
         );
   }
