@@ -1,6 +1,9 @@
 import tradeRoutes from "./routes/tradeRoutes"
 import express from 'express';
 import {errorHandler} from "./middleware/errorHandler"
+import dotenv from 'dotenv'
+
+dotenv.config();
 
 /**
  * Sets up the Express application, defining routes and applying middlewares.
