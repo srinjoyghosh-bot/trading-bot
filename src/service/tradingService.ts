@@ -12,6 +12,11 @@ import logger from "../utils/logger";
 
 let balance = TRADING_BOT_CONFIG.initialBalance;
 
+/**
+ * Executes trading strategies based on stock prices and historical trade data.
+ * Determines whether to buy or sell stocks based on predefined rules like price changes.
+ * @throws TradingBotError if any part of the trade execution logic fails.
+ */
 export const executeTrades = async () => {
   logger.info('Executing trades');
   try {
@@ -28,7 +33,7 @@ export const executeTrades = async () => {
       lastTrades.reverse();
       const lastTrade = lastTrades.find((trade) => trade.symbol === symbol);
 
-      if (currentPrice !== undefined) {
+        // Calculating price change and making appropriate trade decisions
         if (lastTrade) {
           const priceChange =
             (currentPrice - lastTrade.price) / lastTrade.price;
@@ -45,10 +50,10 @@ export const executeTrades = async () => {
             buy(symbol, currentPrice, holdings);
           }
         } else {
-          // First trade action for this symbol; attempt to buy if no holdings exist
+          // First trade action for this symbol; buying if no holdings exist
           buy(symbol, currentPrice, holdings);
         }
-      }
+      
     });
   } catch (error) {
     logger.error(`Error executing trades: ${(error as Error).message}`);
@@ -60,6 +65,13 @@ export const executeTrades = async () => {
   }
 };
 
+/**
+ * Attempts to buy stock by evaluating current holdings, updating balance and recording the trade.
+ * @param symbol The stock symbol to buy.
+ * @param price The price per share for buying.
+ * @param holdings Current object depicting all stock holdings.
+ * @throws TradingBotError if buying logic fails.
+ */
 const buy = (
   symbol: string,
   price: number,
@@ -91,6 +103,13 @@ const buy = (
   }
 };
 
+/**
+ * Attempts to sell stock by evaluating current holdings, updating balance and recording the trade.
+ * @param symbol The stock symbol to sell.
+ * @param price The price per share for selling.
+ * @param holdings Current object depicting all stock holdings.
+ * @throws TradingBotError if selling logic fails.
+ */
 const sell = (
   symbol: string,
   price: number,
@@ -121,6 +140,11 @@ const sell = (
   }
 };
 
+/**
+ * Generates a profit/loss report based on current holdings, prices and initial budget.
+ * @returns An object containing the current balance, holdings and profit/loss figure.
+ * @throws TradingBotError if report generation logic fails.
+ */
 export const getProfitLossReport = () => {
   try {
     const holdings = getHoldings();

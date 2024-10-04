@@ -2,6 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import { executeTrades, getProfitLossReport } from "../service/tradingService";
 import logger from "../utils/logger";
 
+/**
+ * Controller function for executing trade operations via HTTP request.
+ * Responds with current profit/loss or error details if execution fails.
+ *
+ * @param req Express Request object
+ * @param res Express Response object
+ * @param next Express NextFunction for middleware chaining
+ */
 export const trade = async (
   req: Request,
   res: Response,

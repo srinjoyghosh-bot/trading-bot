@@ -2,6 +2,9 @@ import tradeRoutes from "./routes/tradeRoutes"
 import express from 'express';
 import {errorHandler} from "./middleware/errorHandler"
 
+/**
+ * Sets up the Express application, defining routes and applying middlewares.
+ */
 const app=express()
 
 app.use("/api",tradeRoutes)
