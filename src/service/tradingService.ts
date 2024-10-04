@@ -161,10 +161,10 @@ function getPriceAtDate(symbol: string, timestamp: string): number {
  * Generates a profit and loss report based on all trades and current stock prices.
  * Utilizes logging to record key operations and catches potential errors.
  * 
- * @returns The profit and loss report as a string, or an error message if operation fails.
+ * @returns The profit and loss report, or an error message if operation fails.
  * @throws TradingBotError if report generation logic fails.
  */
-export const getProfitLossReport = () : string => {
+export const getProfitLossReport = () => {
     logger.info('Generating profit and loss report');
     try {
         const trades: Trade[] = getAllTrades();
@@ -182,17 +182,22 @@ export const getProfitLossReport = () : string => {
           }
       
           totalProfitOrLoss += profitOrLoss; 
-          logger.debug(`Processed trade: ${trade.symbol} ${trade.type} for ${trade.quantity} units, ` +
-            `profit/loss: $${profitOrLoss.toFixed(2)}`);
-          return `${trade.timestamp} | ${trade.symbol} | ${trade.type} | Quantity: ${trade.quantity} | ` +
-                 `Trade Price: $${tradePrice.toFixed(2)} | Current Price: $${currentPrice.toFixed(2)} | ` +
-                 `Profit/Loss: $${profitOrLoss.toFixed(2)}`;
+          logger.debug(`Processed trade: ${trade.timestamp} | ${trade.symbol} | ${trade.type} | Quantity: ${trade.quantity} | ` +
+            `Trade Price: $${tradePrice.toFixed(2)} | Current Price: $${currentPrice.toFixed(2)} | ` +
+            `Profit/Loss: $${profitOrLoss.toFixed(2)}`);
+          return  {
+            ...trade,
+            currentPrice: currentPrice,
+            profitLoss: profitOrLoss,
+          };
         });
-      
-        const reportHeader = `Date | Symbol | Type | Quantity | Trade Price | Current Price | Profit/Loss`;
-        const totalLine = `Total Profit/Loss: $${totalProfitOrLoss.toFixed(2)}`;
+
         logger.info('Profit and loss report generated successfully');
-        return [reportHeader].concat(reportLines).concat([totalLine]).join('\n');
+
+        return {
+            totalProfitLoss: totalProfitOrLoss,
+            trades: reportLines,
+        };
     } catch (error) {
         console.error(error)
         logger.error(`Error generating profit and loss report: ${(error as Error).message}`);
