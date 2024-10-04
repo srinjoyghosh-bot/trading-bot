@@ -1,17 +1,17 @@
-{
-  "AAPL": 150.0,
-  "GOOG": 2700.0,
-  "AMZN": 3300.0,
-  "MSFT": 290.0,
-  "TSLA": 700.0,
-  "FB": 340.0,
-  "NFLX": 520.0,
-  "NVDA": 200.0,
-  "BABA": 180.0,
-  "JPM": 160.0,
-  "V": 233.0,
-  "DIS": 150.0,
-  "PYPL": 170.0,
-  "BAC": 40.0,
-  "INTC": 55.0
-}
+[
+    { "symbol": "AAPL", "price": 150.0 },
+    { "symbol": "GOOG", "price": 2700.0 },
+    { "symbol": "AMZN", "price": 3300.0 },
+    { "symbol": "MSFT", "price": 290.0 },
+    { "symbol": "TSLA", "price": 700.0 },
+    { "symbol": "FB", "price": 340.0 },
+    { "symbol": "NFLX", "price": 520.0 },
+    { "symbol": "NVDA", "price": 200.0 },
+    { "symbol": "BABA", "price": 180.0 },
+    { "symbol": "JPM", "price": 160.0 },
+    { "symbol": "V", "price": 233.0 },
+    { "symbol": "DIS", "price": 150.0 },
+    { "symbol": "PYPL", "price": 170.0 },
+    { "symbol": "BAC", "price": 40.0 },
+    { "symbol": "INTC", "price": 55.0 }
+  ]
