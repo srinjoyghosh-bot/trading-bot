@@ -32,6 +32,9 @@ export const executeTrades = async () => {
       const shortTermMA = calculateMovingAverage(prices, TRADING_BOT_CONFIG.movingAveragePeriods.shortTerm); 
       const longTermMA = calculateMovingAverage(prices, TRADING_BOT_CONFIG.movingAveragePeriods.longTerm);
 
+      logger.debug(`Short term MA for symbol: ${symbol} is ${shortTermMA}`)
+      logger.debug(`Long term ma for symbol: ${symbol} is ${longTermMA}`)
+
       if (!isNaN(shortTermMA) && !isNaN(longTermMA)) {
         const lastTrades = getAllTrades();
         lastTrades.reverse();
@@ -39,13 +42,15 @@ export const executeTrades = async () => {
         
         if (shortTermMA > longTermMA) {
           // Bullish crossover - Buy
+          logger.debug(`Attempting to buy for symbol: ${symbol}`)
           if (!lastTrade || lastTrade.type === 'sell') {
-            buy(symbol, prices[prices.length - 1].price, holdings);
+            buy(symbol, prices[0].price, holdings);
           }
         } else if (shortTermMA < longTermMA) {
           // Bearish crossover - Sell
-          if (!lastTrade || lastTrade.type === 'buy') {
-            sell(symbol, prices[prices.length - 1].price, holdings);
+          logger.debug(`Attempting to sell for symbol: ${symbol}`)
+          if (lastTrade && lastTrade.type === 'buy') {
+            sell(symbol, prices[0].price, holdings);
           }
         }
       }

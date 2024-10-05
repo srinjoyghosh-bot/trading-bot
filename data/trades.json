@@ -1,72 +1,9 @@
 [
   {
     "type": "buy",
-    "price": 150,
-    "quantity": 666,
+    "price": 155,
+    "quantity": 645,
     "symbol": "AAPL",
-    "timestamp": "2024-10-04T08:59:16.200Z"
-  },
-  {
-    "type": "buy",
-    "price": 2700,
-    "quantity": 37,
-    "symbol": "GOOG",
-    "timestamp": "2024-10-04T08:59:24.982Z"
-  },
-  {
-    "type": "buy",
-    "price": 3300,
-    "quantity": 30,
-    "symbol": "AMZN",
-    "timestamp": "2024-10-04T09:54:51.406Z"
-  },
-  {
-    "type": "buy",
-    "price": 290,
-    "quantity": 3,
-    "symbol": "MSFT",
-    "timestamp": "2024-10-04T09:54:51.414Z"
-  },
-  {
-    "type": "buy",
-    "price": 700,
-    "quantity": 142,
-    "symbol": "TSLA",
-    "timestamp": "2024-10-04T09:56:05.189Z"
-  },
-  {
-    "type": "sell",
-    "price": 142,
-    "quantity": 666,
-    "symbol": "AAPL",
-    "timestamp": "2024-10-04T11:08:44.659Z"
-  },
-  {
-    "type": "sell",
-    "price": 2720,
-    "quantity": 37,
-    "symbol": "GOOG",
-    "timestamp": "2024-10-04T11:08:44.667Z"
-  },
-  {
-    "type": "sell",
-    "price": 3120,
-    "quantity": 30,
-    "symbol": "AMZN",
-    "timestamp": "2024-10-04T11:08:44.676Z"
-  },
-  {
-    "type": "sell",
-    "price": 291,
-    "quantity": 3,
-    "symbol": "MSFT",
-    "timestamp": "2024-10-04T11:08:44.685Z"
-  },
-  {
-    "type": "sell",
-    "price": 728,
-    "quantity": 142,
-    "symbol": "TSLA",
-    "timestamp": "2024-10-04T11:08:44.701Z"
+    "timestamp": "2024-10-05T07:19:23.824Z"
   }
 ]
